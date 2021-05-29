@@ -331,7 +331,7 @@ func (o *Command) File(short string, long string, flag int, perm os.FileMode, op
 // List creates new list argument. This is the argument that is allowed to be present multiple times on CLI.
 // All appearances of this argument on CLI will be collected into the list of default type values ​​which is strings. If no argument
 // provided, then the list is empty. Takes same parameters as String
-// Returns a pointer the list of strings.
+// Returns a pointer to the list of strings.
 func (o *Command) List(short string, long string, opts *Options) *[]string {
 	return o.StringList(short, long, opts)
 }
@@ -430,17 +430,27 @@ func (o *Command) FileList(short string, long string, flag int, perm os.FileMode
 	return &result
 }
 
-// Positional creates an argument which is a catch-all for any remaining strings left over after parsing.
+// PosString creates an argument which collects any strings remaining
+// after parsing all other flags.  The strings will be stored in the
+// results array.  We use a custom type for PosStringResult in order
+// to enable correct rendering of the help text in the usage() switch
+// statement.  The 'name' parameter value is provided in the
+// user-visible help text; see examples/positionals/positionals.go.
+//
+// Any unparsed strings which start with '-' are indistinguishable from
+// an erroneous flag, so will trigger an error message and halt
+// parsing.
+//
 // Returns a pointer to the list of strings.
-func (o *Command) Positional(long string, opts *Options) *PositionalResult {
-	var result PositionalResult
+func (o *Command) PosString(name string, opts *Options) *PosStringResult {
+	var result PosStringResult
 
 	a := &arg{
-		result:     &result,
-		lname:      long,
-		opts:       opts,
-		unique:     true,
-		positional: true,
+		result:    &result,
+		lname:     name,
+		opts:      opts,
+		unique:    true,
+		posstring: true,
 	}
 
 	o.addArg(a)
@@ -624,7 +634,7 @@ func arguments2Result(result string, arguments []*arg, maxWidth int) string {
 				} else {
 					arg = arg + "    "
 				}
-				if argument.positional {
+				if argument.posstring {
 					arg += argument.lname
 				} else {
 					arg = arg + "--" + argument.lname
