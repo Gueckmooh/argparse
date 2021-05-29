@@ -430,6 +430,24 @@ func (o *Command) FileList(short string, long string, flag int, perm os.FileMode
 	return &result
 }
 
+// Positional creates an argument which is a catch-all for any remaining strings left over after parsing.
+// Returns a pointer to the list of strings.
+func (o *Command) Positional(long string, opts *Options) *PositionalResult {
+	var result PositionalResult
+
+	a := &arg{
+		result:     &result,
+		lname:      long,
+		opts:       opts,
+		unique:     true,
+		positional: true,
+	}
+
+	o.addArg(a)
+
+	return &result
+}
+
 // Selector creates a selector argument. Selector argument works in the same way as String argument, with
 // the difference that the string value must be from the list of options provided by the program.
 // Takes short and long names, argument options and a slice of strings which are allowed values
@@ -606,7 +624,11 @@ func arguments2Result(result string, arguments []*arg, maxWidth int) string {
 				} else {
 					arg = arg + "    "
 				}
-				arg = arg + "--" + argument.lname
+				if argument.positional {
+					arg += argument.lname
+				} else {
+					arg = arg + "--" + argument.lname
+				}
 				arg = arg + strings.Repeat(" ", argPadding-len(arg))
 				if argument.opts != nil && argument.opts.Help != "" {
 					arg = addToLastLine(arg, argument.getHelpMessage(), maxWidth, argPadding, true)

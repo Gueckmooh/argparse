@@ -9,18 +9,19 @@ import (
 )
 
 type arg struct {
-	result   interface{} // Pointer to the resulting value
-	opts     *Options    // Options
-	sname    string      // Short name (in Parser will start with "-"
-	lname    string      // Long name (in Parser will start with "--"
-	size     int         // Size defines how many args after match will need to be consumed
-	unique   bool        // Specifies whether flag should be present only ones
-	parsed   bool        // Specifies whether flag has been parsed already
-	fileFlag int         // File mode to open file with
-	filePerm os.FileMode // File permissions to set a file
-	selector *[]string   // Used in Selector type to allow to choose only one from list of options
-	parent   *Command    // Used to get access to specific Command
-	eqChar   bool        // This is used if the command is passed in with an equals char as a seperator
+	result     interface{} // Pointer to the resulting value
+	opts       *Options    // Options
+	sname      string      // Short name (in Parser will start with "-"
+	lname      string      // Long name (in Parser will start with "--"
+	size       int         // Size defines how many args after match will need to be consumed
+	unique     bool        // Specifies whether flag should be present only ones
+	positional bool        // Positional is set if arg is to contain unparsed CLI strings
+	parsed     bool        // Specifies whether flag has been parsed already
+	fileFlag   int         // File mode to open file with
+	filePerm   os.FileMode // File permissions to set a file
+	selector   *[]string   // Used in Selector type to allow to choose only one from list of options
+	parent     *Command    // Used to get access to specific Command
+	eqChar     bool        // This is used if the command is passed in with an equals char as a seperator
 }
 
 // Arg interface provides exporting of arg structure, while exposing it
@@ -40,6 +41,29 @@ func (o arg) GetSname() string {
 
 func (o arg) GetLname() string {
 	return o.lname
+}
+
+type PositionalResult []string
+
+func (o *arg) assignPositional(args *[]string) {
+	// We could use oarg.size to break the unparsed list up into more
+	// than one positional; for now, we just silently ignore all but
+	// the first positional oarg we find.
+	//
+	// Also see the nargs branch in github.com/jokelyo/argparse -- it
+	// doesn't appear to handle positionals yet, but could be modified
+	// to do so.
+	if !o.positional {
+		return
+	}
+	var result PositionalResult
+	for i, v := range *args {
+		if v != "" && v[0] != '-' {
+			result = append(result, v)
+			(*args)[i] = ""
+		}
+	}
+	*o.result.(*PositionalResult) = result
 }
 
 type help struct{}
@@ -393,7 +417,9 @@ func (o *arg) parse(args []string, argCount int) error {
 
 func (o *arg) name() string {
 	var name string
-	if o.lname == "" {
+	if o.positional {
+		name = o.lname
+	} else if o.lname == "" {
 		name = "-" + o.sname
 	} else if o.sname == "" {
 		name = "--" + o.lname
@@ -423,6 +449,8 @@ func (o *arg) usage() string {
 		result = result + " <file>"
 	case *[]string:
 		result = result + " \"<value>\"" + " [" + result + " \"<value>\" ...]"
+	case *PositionalResult:
+		result = result + " ..."
 	default:
 		break
 	}
