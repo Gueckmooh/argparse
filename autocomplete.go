@@ -56,7 +56,7 @@ _%s_completions()
 	subargopts_match_list = `    %s_subargopts_match="%s"
 `
 
-	subargopts_test = `    if [[ ${sub} == "%s" ]] && [[ ${prev} =~ ${%s_subargopts_match} ]] ; then
+	subargopts_test = `    if [[ ${sub} == "%s" ]] && ([[ ${prev} =~ ${%s_subargopts_match} ]] || [[ ${prev} =~ ${argopts_match} ]]); then
         COMPREPLY=( $(compgen -f -- ${cur}) )
         return 0
     fi
