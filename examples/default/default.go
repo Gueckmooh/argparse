@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/akamensky/argparse"
+	"github.com/gueckmooh/argparse"
 )
 
 func main() {

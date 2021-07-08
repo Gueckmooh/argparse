@@ -7,7 +7,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/akamensky/argparse"
+	"github.com/gueckmooh/argparse"
 	"os"
 	"strconv"
 	"strings"
