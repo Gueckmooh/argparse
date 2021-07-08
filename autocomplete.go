@@ -39,7 +39,7 @@ _%s_completions()
 `
 
 	gargopts_test = `    if [[ ${prev} =~ ${argopts_match} ]] ; then
-        COMPREPLY=( $(compgen -f -- ${cur}) )
+        _filedir
         return 0
     fi
 `
@@ -57,7 +57,7 @@ _%s_completions()
 `
 
 	subargopts_test = `    if [[ ${sub} == "%s" ]] && ([[ ${prev} =~ ${%s_subargopts_match} ]] || [[ ${prev} =~ ${argopts_match} ]]); then
-        COMPREPLY=( $(compgen -f -- ${cur}) )
+        _filedir
         return 0
     fi
 `
